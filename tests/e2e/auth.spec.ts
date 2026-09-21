@@ -61,7 +61,7 @@ test.describe("authentication and role-based access (§28)", () => {
 
   test("an admin reaches HR and admin", async ({ page }) => {
     await login(page, ADMIN_EMAIL);
-    await expectSignedInAt(page, "/admin", "Admin Console");
+    await expectSignedInAt(page, "/admin", "Ananya Sharma");
 
     await page.goto("/hr");
     await expectSignedInAt(page, "/hr", "HR Hub");
@@ -69,7 +69,7 @@ test.describe("authentication and role-based access (§28)", () => {
 
   test("signing out returns to the login page", async ({ page }) => {
     await login(page, ADMIN_EMAIL);
-    await expectSignedInAt(page, "/admin", "Admin Console");
+    await expectSignedInAt(page, "/admin", "Ananya Sharma");
 
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL(/\/login$/);
