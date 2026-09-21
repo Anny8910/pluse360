@@ -8,6 +8,13 @@
       "when": 1790013600156,
       "tag": "0000_military_next_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790014709580,
+      "tag": "0001_bright_toad",
+      "breakpoints": true
     }
   ]
 }

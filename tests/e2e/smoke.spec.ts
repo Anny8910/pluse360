@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-test("home page renders Pulse360", async ({ page }) => {
+test("unauthenticated visitors are redirected to the login page", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Pulse360" })).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Sign in to Pulse360" })).toBeVisible();
 });

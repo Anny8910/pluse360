@@ -10,6 +10,7 @@
 
 import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
 import {
   MOOD_TAGS,
   RECOGNITION_CATEGORIES,
@@ -17,6 +18,9 @@ import {
 } from "./schema";
 
 config({ path: ".env.local" });
+
+// Dev-only credentials for the fake seed users (never used in production).
+const SEED_PASSWORD = "Pulse360@Dev1";
 
 // Deterministic PRNG so reseeding is stable across runs.
 function mulberry32(seed: number) {
@@ -131,6 +135,7 @@ const CONCERN_DESCRIPTIONS = [
 async function main() {
   const { db } = await import("./index");
   const {
+    account,
     analyticsSnapshots,
     auditLogs,
     concernMentions,
@@ -141,12 +146,17 @@ async function main() {
     notificationPreferences,
     organizations,
     recognitions,
+    session,
     teams,
     users,
+    verification,
   } = await import("./schema");
 
   console.log("Clearing existing seed data…");
 
+  await db.delete(session);
+  await db.delete(account);
+  await db.delete(verification);
   await db.delete(notificationPreferences);
   await db.delete(hrNotes);
   await db.delete(concernMentions);
@@ -216,6 +226,7 @@ async function main() {
       id: randomUUID(),
       organizationId: orgId,
       email,
+      emailVerified: true,
       name: `${first} ${last}`,
       role,
       departmentId,
@@ -275,6 +286,27 @@ async function main() {
   ];
 
   await db.insert(users).values(allUsers.map((u) => ({ ...u })));
+
+  // --- Better Auth credential accounts ---------------------------------------
+  // providerId "credential" + accountId = user.id (the lookup shape Better Auth
+  // uses for email/password sign-in).
+  const accountRows: {
+    id: string;
+    accountId: string;
+    providerId: string;
+    userId: string;
+    password: string;
+  }[] = [];
+  for (const u of allUsers) {
+    accountRows.push({
+      id: randomUUID(),
+      accountId: u.id,
+      providerId: "credential",
+      userId: u.id,
+      password: await hashPassword(SEED_PASSWORD),
+    });
+  }
+  await db.insert(account).values(accountRows);
 
   await db.insert(notificationPreferences).values(
     allUsers.map((u) => ({
@@ -559,6 +591,7 @@ async function main() {
         organization: "Pulse360 Demo Company",
         users: allUsers.length,
         employees: employeeIds.length,
+        credentialAccounts: accountRows.length,
         departments: deptRows.length,
         teams: teamRows.length,
         pulses: pulses.length,

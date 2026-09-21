@@ -11,6 +11,8 @@ import {
   notificationPreferences,
   organizations,
   recognitions,
+  session,
+  account,
   teams,
   users,
 } from "./tables";
@@ -78,6 +80,22 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   concernMentions: many(concernMentions),
   hrNotes: many(hrNotes),
   notificationPreferences: one(notificationPreferences),
+  sessions: many(session),
+  accounts: many(account),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(users, {
+    fields: [session.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(users, {
+    fields: [account.userId],
+    references: [users.id],
+  }),
 }));
 
 export const dailyPulsesRelations = relations(dailyPulses, ({ one }) => ({

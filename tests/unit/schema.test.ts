@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import {
+  account,
   analyticsSnapshots,
   auditLogs,
   concernMentions,
@@ -12,8 +13,10 @@ import {
   notificationPreferences,
   organizations,
   recognitions,
+  session,
   teams,
   users,
+  verification,
 } from "@/db/schema";
 
 const columnNames = (table: Parameters<typeof getTableConfig>[0]) =>
@@ -122,6 +125,42 @@ describe("database schema (§14)", () => {
       "reminder_time",
       "timezone",
     ]) {
+      expect(names).toContain(expected);
+    }
+  });
+
+  it("adds authentication fields to the users table", () => {
+    const names = columnNames(users);
+    expect(names).toContain("email_verified");
+    expect(names).toContain("image");
+  });
+
+  it("defines the Better Auth session table", () => {
+    const names = columnNames(session);
+    for (const expected of ["id", "token", "user_id", "expires_at", "ip_address", "user_agent"]) {
+      expect(names).toContain(expected);
+    }
+  });
+
+  it("defines the Better Auth account table with hashed password storage", () => {
+    const names = columnNames(account);
+    for (const expected of [
+      "id",
+      "account_id",
+      "provider_id",
+      "user_id",
+      "access_token",
+      "refresh_token",
+      "scope",
+      "password",
+    ]) {
+      expect(names).toContain(expected);
+    }
+  });
+
+  it("defines the Better Auth verification table", () => {
+    const names = columnNames(verification);
+    for (const expected of ["id", "identifier", "value", "expires_at"]) {
       expect(names).toContain(expected);
     }
   });
