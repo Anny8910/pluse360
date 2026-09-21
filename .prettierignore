@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+build
+coverage
+drizzle
+playwright-report
+test-results
+package-lock.json
+public
