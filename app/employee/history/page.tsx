@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmployeeNav } from "@/components/employee/nav";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import {
   Table,
   TableBody,
@@ -34,7 +34,7 @@ export default async function EmployeeHistoryPage() {
             Your past check-ins, newest first.
           </p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <EmployeeNav showTeam={false} />

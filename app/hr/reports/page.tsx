@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HrNav } from "@/components/hr/nav";
 import { ReportGenerateForm } from "@/components/hr/report-form";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import {
   Table,
   TableBody,
@@ -37,7 +37,7 @@ export default async function HrReportsPage() {
             Aggregate insights over each month.
           </p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <HrNav />

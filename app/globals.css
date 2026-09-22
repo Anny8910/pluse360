@@ -1,26 +1,112 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(0.985 0.003 296);
+  --foreground: oklch(0.185 0.014 294);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.185 0.014 294);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.185 0.014 294);
+  --primary: oklch(0.5 0.23 295);
+  --primary-foreground: oklch(0.99 0.005 296);
+  --secondary: oklch(0.945 0.014 294);
+  --secondary-foreground: oklch(0.32 0.042 295);
+  --muted: oklch(0.955 0.006 294);
+  --muted-foreground: oklch(0.5 0.018 294);
+  --accent: oklch(0.944 0.033 295);
+  --accent-foreground: oklch(0.32 0.07 295);
+  --destructive: oklch(0.577 0.211 27);
+  --destructive-foreground: oklch(0.98 0.005 20);
+  --border: oklch(0.905 0.009 294);
+  --input: oklch(0.905 0.009 294);
+  --ring: oklch(0.5 0.23 295);
+  --radius-sm: 0.65rem;
+  --radius-md: 0.85rem;
+  --radius-lg: 1.05rem;
+  --radius-xl: 1.35rem;
+  --chart-1: oklch(0.5 0.23 295);
+  --chart-2: oklch(0.66 0.12 280);
+  --chart-3: oklch(0.77 0.1 300);
+  --chart-4: oklch(0.45 0.2 310);
+  --chart-5: oklch(0.86 0.08 298);
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(0.158 0.014 294);
+  --foreground: oklch(0.94 0.01 294);
+  --card: oklch(0.198 0.016 294);
+  --card-foreground: oklch(0.94 0.01 294);
+  --popover: oklch(0.198 0.016 294);
+  --popover-foreground: oklch(0.94 0.01 294);
+  --primary: oklch(0.68 0.17 296);
+  --primary-foreground: oklch(0.24 0.04 294);
+  --secondary: oklch(0.26 0.02 294);
+  --secondary-foreground: oklch(0.9 0.012 294);
+  --muted: oklch(0.245 0.016 294);
+  --muted-foreground: oklch(0.66 0.02 294);
+  --accent: oklch(0.3 0.055 296);
+  --accent-foreground: oklch(0.9 0.025 296);
+  --destructive: oklch(0.62 0.22 28);
+  --destructive-foreground: oklch(0.98 0.005 20);
+  --border: oklch(0.29 0.02 294);
+  --input: oklch(0.29 0.02 294);
+  --ring: oklch(0.68 0.17 296);
+  --chart-1: oklch(0.68 0.17 296);
+  --chart-2: oklch(0.72 0.13 280);
+  --chart-3: oklch(0.8 0.11 300);
+  --chart-4: oklch(0.55 0.21 310);
+  --chart-5: oklch(0.88 0.09 298);
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background:
+    radial-gradient(
+      1200px 560px at 50% -12%,
+      color-mix(in oklch, var(--primary) 9%, transparent),
+      transparent 62%
+    ),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+::selection {
+  background: color-mix(in oklch, var(--primary) 24%, transparent);
 }

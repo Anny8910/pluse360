@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { BrandMark } from "@/components/brand-mark";
 import { EmployeeNav } from "@/components/employee/nav";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import { db } from "@/db";
 import { dailyPulses, organizations } from "@/db/schema";
 import { requireAuth } from "@/lib/permissions";
@@ -36,13 +37,16 @@ export default async function EmployeeHomePage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6">
       <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Employee Workspace</h1>
-          <p className="text-muted-foreground text-sm">
-            Welcome back, {user.name}.
-          </p>
+        <div className="flex items-center gap-3">
+          <BrandMark className="size-10 shrink-0 drop-shadow-sm" />
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Employee Workspace</h1>
+            <p className="text-muted-foreground text-sm">
+              Welcome back, {user.name}.
+            </p>
+          </div>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <EmployeeNav showTeam={canViewAnalytics(user)} />

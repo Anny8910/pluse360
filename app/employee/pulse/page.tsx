@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmployeeNav } from "@/components/employee/nav";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import { PulseForm } from "@/components/employee/pulse-form";
 import { db } from "@/db";
 import { dailyPulses, organizations } from "@/db/schema";
@@ -36,7 +36,7 @@ export default async function EmployeeSubmitPage() {
             Takes about 60 seconds. One per day.
           </p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <EmployeeNav showTeam={false} />

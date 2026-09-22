@@ -11,6 +11,7 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
+    serviceWorkers: "block",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

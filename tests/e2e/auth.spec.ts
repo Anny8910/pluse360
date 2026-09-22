@@ -23,7 +23,7 @@ test.describe("authentication and role-based access (§28)", () => {
   test("anonymous visitors are redirected to the login page", async ({ page }) => {
     await page.goto("/employee");
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: "Sign in to Pulse360" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Pulse360" })).toBeVisible();
   });
 
   test("sign-in rejects an invalid password", async ({ page }) => {
@@ -73,6 +73,6 @@ test.describe("authentication and role-based access (§28)", () => {
 
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: "Sign in to Pulse360" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Pulse360" })).toBeVisible();
   });
 });

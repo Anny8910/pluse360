@@ -28,8 +28,8 @@ export function HrNav() {
             className={cn(
               "rounded-lg px-3 py-1.5 text-sm transition-colors",
               active
-                ? "bg-foreground/5 font-medium text-foreground"
-                : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                ? "bg-primary/10 font-medium text-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
           >
             {link.label}

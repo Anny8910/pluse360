@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HrNav } from "@/components/hr/nav";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import { db } from "@/db";
 import { concerns, dailyPulses, organizations, users } from "@/db/schema";
 import { buildInsights } from "@/lib/ai/insights";
@@ -91,7 +91,7 @@ export default async function HrOverviewPage() {
             Organization-wide wellbeing, at a glance.
           </p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <HrNav />

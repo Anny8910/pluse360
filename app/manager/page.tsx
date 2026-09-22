@@ -2,7 +2,7 @@ import { and, eq, gte, inArray } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmployeeNav } from "@/components/employee/nav";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import {
   Table,
   TableBody,
@@ -121,7 +121,7 @@ export default async function ManagerTeamPage() {
             Insights about your direct reports.
           </p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <EmployeeNav showTeam />

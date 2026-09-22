@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConcernCreateForm, ConcernUpdateForm, HrNoteForm } from "@/components/hr/concern-forms";
 import { HrNav } from "@/components/hr/nav";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import { db } from "@/db";
 import { concerns } from "@/db/schema";
 import { requireRole } from "@/lib/permissions";
@@ -30,7 +30,7 @@ export default async function HrConcernsPage() {
             Log and track workplace concerns.
           </p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <HrNav />

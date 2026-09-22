@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmployeeNav } from "@/components/employee/nav";
 import { NotificationPreferencesForm } from "@/components/employee/preferences-form";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import { db } from "@/db";
 import { notificationPreferences, users } from "@/db/schema";
 import { requireAuth } from "@/lib/permissions";
@@ -41,7 +41,7 @@ export default async function ProfilePage() {
           <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
           <p className="text-muted-foreground text-sm">{user.name}</p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <EmployeeNav showTeam={false} />

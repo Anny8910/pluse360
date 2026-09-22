@@ -2,7 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HrNav } from "@/components/hr/nav";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderActions } from "@/components/auth/header-actions";
 import {
   Table,
   TableBody,
@@ -59,7 +59,7 @@ export default async function HrEmployeesPage() {
             Everyone active in {org?.name} ({rows.length}).
           </p>
         </div>
-        <SignOutButton />
+        <HeaderActions />
       </header>
 
       <HrNav />
