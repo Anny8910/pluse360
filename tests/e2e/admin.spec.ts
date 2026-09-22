@@ -56,11 +56,13 @@ test.describe.serial("admin console (§4)", () => {
     await page.getByRole("button", { name: "Create user" }).click();
 
     const row = page.locator("tr").filter({ hasText: newUserEmail });
-    await expect(row).toContainText("Taylor Newhire");
+    await expect(row).toContainText("Taylor Newhire", { timeout: 20_000 });
     await expect(row).toContainText("employee");
 
-    await row.getByLabel(/Role/).selectOption({ label: "manager" });
-    await row.getByRole("button", { name: "Save" }).click();
+    await row.getByRole("button", { name: "Edit" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel(/Role/).selectOption({ label: "manager" });
+    await dialog.getByRole("button", { name: "Save" }).click();
     await expect(row).toContainText("manager");
   });
 

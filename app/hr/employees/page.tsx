@@ -1,8 +1,11 @@
 import { and, eq, inArray } from "drizzle-orm";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HrNav } from "@/components/hr/nav";
 import { HeaderActions } from "@/components/auth/header-actions";
+import { CalendarClock } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -77,13 +80,21 @@ export default async function HrEmployeesPage() {
                 <TableHead>Department / Team</TableHead>
                 <TableHead>Manager</TableHead>
                 <TableHead>Pulse today</TableHead>
+                <TableHead className="text-right">Pulse log</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell>
-                    <div className="font-medium">{r.name}</div>
+                    <div className="font-medium">
+                      <Link
+                        href={`/hr/employees/${r.id}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {r.name}
+                      </Link>
+                    </div>
                     <div className="text-muted-foreground text-xs">{r.email}</div>
                   </TableCell>
                   <TableCell>
@@ -99,6 +110,16 @@ export default async function HrEmployeesPage() {
                     <Badge variant={submitted.has(r.id) ? "default" : "outline"}>
                       {submitted.has(r.id) ? "Recorded" : "Pending"}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link
+                      href={`/hr/employees/${r.id}`}
+                      className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+                      aria-label={`Pulse log for ${r.name}`}
+                      title="View pulse log"
+                    >
+                      <CalendarClock aria-hidden="true" />
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}

@@ -69,6 +69,33 @@ test.describe.serial("HR workspace: concerns, employees, reports (§8)", () => {
     await expect(page.locator("tbody tr").first()).toBeVisible();
   });
 
+  test("the HR member opens a period-based pulse log for one employee", async ({
+    page,
+  }) => {
+    await login(page, HR_EMAIL);
+    await page.waitForURL("/hr");
+
+    await page.goto("/hr/employees");
+    const firstRow = page.locator("tbody tr").first();
+    const employeeName = (await firstRow.locator("td").first().innerText())
+      .split("\n")[0];
+    await firstRow
+      .getByRole("link", { name: /Pulse log for/ })
+      .click();
+
+    await page.waitForURL(/\/hr\/employees\/[a-f0-9-]{36}/, { timeout: 20_000 });
+    await expect(
+      page.getByRole("heading", { name: employeeName })
+    ).toBeVisible();
+    await expect(page.getByText("Pulse timeline")).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByRole("columnheader", { name: "Submissions" })
+    ).toBeVisible({ timeout: 15_000 });
+
+    await page.goto(page.url() + "?preset=7");
+    await expect(page.getByText("Relationship signals")).toBeVisible({ timeout: 15_000 });
+  });
+
   test("the HR member generates a monthly report", async ({ page }) => {
     await login(page, HR_EMAIL);
     await page.waitForURL("/hr");

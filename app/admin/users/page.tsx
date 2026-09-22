@@ -1,10 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
-import {
-  UserActiveForm,
-  UserCreateForm,
-  UserEditForm,
-  UserPasswordForm,
-} from "@/components/admin/forms";
+import { UserCreateForm } from "@/components/admin/forms";
+import { UserRowActions } from "@/components/admin/user-actions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -52,7 +48,11 @@ export default async function AdminUsersPage() {
           <CardTitle>Create a user</CardTitle>
         </CardHeader>
         <CardContent>
-          <UserCreateForm departments={deptRows} teams={teamRows} managers={managerRows} />
+          <UserCreateForm
+            departments={deptRows}
+            teams={teamRows}
+            managers={managerRows}
+          />
         </CardContent>
       </Card>
 
@@ -60,7 +60,7 @@ export default async function AdminUsersPage() {
         <CardHeader>
           <CardTitle>Users ({userRows.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -69,8 +69,7 @@ export default async function AdminUsersPage() {
                 <TableHead>Department / Team</TableHead>
                 <TableHead>Manager</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Edit</TableHead>
-                <TableHead>Password</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -97,11 +96,13 @@ export default async function AdminUsersPage() {
                       {row.active ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <UserEditForm
+                  <TableCell className="text-right">
+                    <UserRowActions
                       user={{
                         id: row.id,
                         name: row.name,
+                        email: row.email,
+                        active: row.active,
                         role: row.role,
                         departmentId: row.departmentId,
                         teamId: row.teamId,
@@ -112,17 +113,8 @@ export default async function AdminUsersPage() {
                       departments={deptRows}
                       teams={teamRows}
                       managers={managerRows}
+                      locked={row.id === user.id}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-3">
-                      <UserPasswordForm id={row.id} email={row.email} />
-                      <UserActiveForm
-                        id={row.id}
-                        active={row.active}
-                        disabled={row.id === user.id}
-                      />
-                    </div>
                   </TableCell>
                 </TableRow>
               ))}
