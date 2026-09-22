@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, eq, gte, inArray, lte, ne } from "drizzle-orm";
-import { ArrowLeft } from "lucide-react";
+import { eq } from "drizzle-orm";
+import { ArrowLeft, FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -22,18 +22,15 @@ import {
 import { HrNav } from "@/components/hr/nav";
 import { HeaderActions } from "@/components/auth/header-actions";
 import { db } from "@/db";
-import { dailyPulses, organizations, recognitions, users } from "@/db/schema";
+import { organizations } from "@/db/schema";
 import { requireRole } from "@/lib/permissions";
 import { SENTIMENT_LABELS } from "@/lib/validation/pulse";
-import { daysAgoKey, dayKey, todayKey, utcDateKey } from "@/lib/utils/date";
-
-const PRESETS = [
-  { days: 7, label: "7 days" },
-  { days: 30, label: "30 days" },
-  { days: 90, label: "90 days" },
-] as const;
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+import { dayKey, daysAgoKey } from "@/lib/utils/date";
+import {
+  loadEmployeeInsights,
+  PULSE_PRESETS,
+  resolvePulsePeriod,
+} from "@/lib/hr/employee-insights";
 
 function formatKey(key: string): string {
   const d = new Date(`${key}T12:00:00`);
@@ -51,23 +48,10 @@ function formatKeyLong(key: string): string {
   }).format(d);
 }
 
-function isoWeekMonday(key: string): string {
-  const d = new Date(`${key}T12:00:00`);
-  const dow = (d.getUTCDay() + 6) % 7;
-  d.setUTCDate(d.getUTCDate() - dow);
-  return d.toISOString().slice(0, 10);
-}
-
 function scoreBadgeVariant(score: number): "default" | "secondary" | "destructive" {
   if (score >= 4) return "default";
   if (score <= 2) return "destructive";
   return "secondary";
-}
-
-function clampDateKey(key: string): string {
-  const d = new Date(`${key}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return key;
-  return d.toISOString().slice(0, 10);
 }
 
 export default async function HrEmployeePulsePage(props: {
@@ -85,140 +69,38 @@ export default async function HrEmployeePulsePage(props: {
     .where(eq(organizations.id, user.organizationId))
     .limit(1);
 
-  const employee = await db.query.users.findFirst({
-    where: and(eq(users.id, id), eq(users.organizationId, user.organizationId)),
-    with: { department: true, team: true, manager: true },
+  const period = resolvePulsePeriod(sp, org?.timezone);
+
+  const insights = await loadEmployeeInsights({
+    organizationId: user.organizationId,
+    employeeId: id,
+    start: period.start,
+    end: period.end,
   });
-  if (!employee) notFound();
+  if (!insights) notFound();
+
+  const { employee, pulses, connections, limitedTeammates, weekRows, count, avg, high, low, topTags } =
+    insights;
 
   const getParam = (k: string) => {
     const v = sp[k];
     return typeof v === "string" ? v : undefined;
   };
-  const fromRaw = getParam("from");
-  const toRaw = getParam("to");
-  const presetRaw = getParam("preset");
-  const presetDays = PRESETS.find((p) => String(p.days) === presetRaw)?.days ?? 30;
-
-  let start: string;
-  let end: string;
-  const fromValid = fromRaw && DATE_RE.test(fromRaw) ? clampDateKey(fromRaw) : null;
-  const toValid = toRaw && DATE_RE.test(toRaw) ? clampDateKey(toRaw) : null;
-  if (fromValid && toValid && fromValid <= toValid) {
-    start = fromValid;
-    end = toValid;
-  } else if (fromValid && !toValid) {
-    start = fromValid;
-    end = todayKey(org?.timezone);
-  } else {
-    end = todayKey(org?.timezone);
-    start = daysAgoKey(presetDays, org?.timezone);
-  }
-  const cappedStartMs = utcDateKey(start).getTime();
-  const cappedEndMs = utcDateKey(end).getTime();
-  if (cappedEndMs - cappedStartMs > 366 * 86_400_000) {
-    start = dayKey(new Date(cappedEndMs - 365 * 86_400_000));
-  }
-
-  const range = { startUtc: utcDateKey(start), endUtc: utcDateKey(end) };
-
-  const [pulses, givenRows, receivedRows] = await Promise.all([
-    db.query.dailyPulses.findMany({
-      where: and(
-        eq(dailyPulses.organizationId, user.organizationId),
-        eq(dailyPulses.employeeId, employee.id),
-        gte(dailyPulses.pulseDate, range.startUtc),
-        lte(dailyPulses.pulseDate, range.endUtc)
-      ),
-      orderBy: (p, { asc }) => [asc(p.pulseDate)],
-    }),
-    db.query.recognitions.findMany({
-      where: and(
-        eq(recognitions.organizationId, user.organizationId),
-        eq(recognitions.giverId, employee.id),
-        gte(recognitions.recognitionDate, range.startUtc),
-        lte(recognitions.recognitionDate, range.endUtc)
-      ),
-    }),
-    db.query.recognitions.findMany({
-      where: and(
-        eq(recognitions.organizationId, user.organizationId),
-        eq(recognitions.recipientId, employee.id),
-        gte(recognitions.recognitionDate, range.startUtc),
-        lte(recognitions.recognitionDate, range.endUtc)
-      ),
-    }),
-  ]);
-
-  const peerIds = [...new Set([
-    ...givenRows.map((r) => r.recipientId),
-    ...receivedRows.map((r) => r.giverId),
-  ])];
-  const peers =
-    peerIds.length > 0
-      ? await db.query.users.findMany({
-          where: and(eq(users.organizationId, user.organizationId), inArray(users.id, peerIds)),
-          columns: { id: true, name: true },
-        })
-      : [];
-  const peerName = new Map(peers.map((p) => [p.id, p.name]));
-
-  const teammates =
-    employee.teamId
-      ? await db.query.users.findMany({
-          where: and(
-            eq(users.organizationId, user.organizationId),
-            eq(users.teamId, employee.teamId),
-            eq(users.active, true),
-            ne(users.id, employee.id)
-          ),
-          orderBy: (u, { asc }) => [asc(u.name)],
-          columns: { id: true, name: true },
-        })
-      : [];
-
-  const conn = new Map<string, { given: number; received: number }>();
-  for (const r of givenRows) {
-    const c = conn.get(r.recipientId) ?? { given: 0, received: 0 };
-    c.given += 1;
-    conn.set(r.recipientId, c);
-  }
-  for (const r of receivedRows) {
-    const c = conn.get(r.giverId) ?? { given: 0, received: 0 };
-    c.received += 1;
-    conn.set(r.giverId, c);
-  }
-  const connections = [...conn.entries()]
-    .map(([peerId, c]) => ({ peerId, name: peerName.get(peerId) ?? "Unknown", ...c }))
-    .sort((a, b) => b.given + b.received - (a.given + a.received));
-  const limitedTeammates = teammates.filter((t) => !conn.has(t.id));
-
-  const count = pulses.length;
-  const avg = count ? pulses.reduce((s, p) => s + p.sentimentScore, 0) / count : null;
-  const high = pulses.filter((p) => p.sentimentScore >= 4).length;
-  const low = pulses.filter((p) => p.sentimentScore <= 2).length;
-  const tagTotals = new Map<string, number>();
-  for (const p of pulses) {
-    for (const t of p.moodTags) tagTotals.set(t, (tagTotals.get(t) ?? 0) + 1);
-  }
-  const topTags = [...tagTotals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-  const weeks = new Map<string, typeof pulses>();
-  for (const p of pulses) {
-    const wk = isoWeekMonday(dayKey(p.pulseDate));
-    weeks.set(wk, [...(weeks.get(wk) ?? []), p]);
-  }
-  const weekRows = [...weeks.entries()].sort((a, b) => a[0].localeCompare(b[0])).reverse();
 
   const last30Pending =
-    presetDays === 30 && !fromValid && !toValid
+    period.presetDays === 30 && !getParam("from") && !getParam("to")
       ? [...Array(30).keys()].filter(
-          (i) =>
-            !pulses.some(
-              (p) => dayKey(p.pulseDate) === daysAgoKey(i, org?.timezone)
-            )
+          (i) => !pulses.some((p) => dayKey(p.pulseDate) === daysAgoKey(i, org?.timezone))
         ).length
       : null;
+
+  const reportQuery = new URLSearchParams();
+  if (getParam("preset")) reportQuery.set("preset", getParam("preset") as string);
+  if (getParam("from")) reportQuery.set("from", getParam("from") as string);
+  if (getParam("to")) reportQuery.set("to", getParam("to") as string);
+  const reportHref = `/api/hr/employees/${employee.id}/report/pdf${
+    reportQuery.toString() ? `?${reportQuery.toString()}` : ""
+  }`;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6">
@@ -252,18 +134,28 @@ export default async function HrEmployeePulsePage(props: {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Pulse timeline</CardTitle>
-          <CardDescription>
-            Showing {count} pulse{count === 1 ? "" : "s"} from{" "}
-            {formatKey(start)} to {formatKey(end)}. Choose a period below.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between gap-3">
+          <div>
+            <CardTitle>Pulse timeline</CardTitle>
+            <CardDescription>
+              Showing {count} pulse{count === 1 ? "" : "s"} from{" "}
+              {formatKey(period.start)} to {formatKey(period.end)}. Choose a period below.
+            </CardDescription>
+          </div>
+          <a
+            href={reportHref}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+            title="Generate this employee's pulse report as a PDF"
+          >
+            <FileDown aria-hidden="true" className="size-4" />
+            Report PDF
+          </a>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex items-center gap-1.5">
-              {PRESETS.map((p) => {
-                const active = !fromValid && !toValid && presetDays === p.days;
+              {PULSE_PRESETS.map((p) => {
+                const active = !getParam("from") && !getParam("to") && period.presetDays === p.days;
                 return (
                   <Link
                     key={p.days}
@@ -292,7 +184,7 @@ export default async function HrEmployeePulsePage(props: {
                   id="pulse-from"
                   name="from"
                   type="date"
-                  defaultValue={start}
+                  defaultValue={period.start}
                   className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:ring-3"
                 />
               </div>
@@ -304,7 +196,7 @@ export default async function HrEmployeePulsePage(props: {
                   id="pulse-to"
                   name="to"
                   type="date"
-                  defaultValue={end}
+                  defaultValue={period.end}
                   className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:ring-3"
                 />
               </div>
@@ -357,14 +249,14 @@ export default async function HrEmployeePulsePage(props: {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {weekRows.map(([wk, items]) => {
-                  const wkAvg = items.reduce((s, p) => s + p.sentimentScore, 0) / items.length;
+                {weekRows.map(({ startKey, pulses: wk }) => {
+                  const wkAvg = wk.reduce((s, p) => s + p.sentimentScore, 0) / wk.length;
                   const weekDays = 5;
-                  const full = items.length >= weekDays;
+                  const full = wk.length >= weekDays;
                   return (
-                    <TableRow key={wk}>
-                      <TableCell className="font-medium">Week of {formatKeyLong(wk)}</TableCell>
-                      <TableCell>{items.length}</TableCell>
+                    <TableRow key={startKey}>
+                      <TableCell className="font-medium">Week of {formatKeyLong(startKey)}</TableCell>
+                      <TableCell>{wk.length}</TableCell>
                       <TableCell>{wkAvg.toFixed(1)}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {full ? "Full coverage" : "Partial"}

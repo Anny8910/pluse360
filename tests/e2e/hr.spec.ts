@@ -105,6 +105,18 @@ test.describe.serial("HR workspace: concerns, employees, reports (§8)", () => {
       page.getByRole("columnheader", { name: "Submissions" })
     ).toBeVisible({ timeout: 15_000 });
 
+    const report = page.getByRole("link", { name: "Report PDF" });
+    await expect(report).toBeVisible({ timeout: 15_000 });
+    await expect(report).toHaveAttribute(
+      "href",
+      /\/api\/hr\/employees\/[a-f0-9-]{36}\/report\/pdf/
+    );
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      report.click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/pulse360-.+-.+-to-.+\.pdf/);
+
     await page.goto(page.url() + "?preset=7");
     await expect(page.getByText("Relationship signals")).toBeVisible({ timeout: 15_000 });
   });
