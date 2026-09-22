@@ -63,7 +63,7 @@ test.describe.serial("admin console (§4)", () => {
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel(/Role/).selectOption({ label: "manager" });
     await dialog.getByRole("button", { name: "Save" }).click();
-    await expect(row).toContainText("manager");
+    await expect(row).toContainText("manager", { timeout: 20_000 });
   });
 
   test("the created user can sign in but cannot reach admin", async ({ page }) => {

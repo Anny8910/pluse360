@@ -3,9 +3,9 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { dailyPulses, organizations } from "@/db/schema";
+import { dailyPulses, organizations, recognitions, users } from "@/db/schema";
 import { requireAuth } from "@/lib/permissions";
-import { pulseSchema, sanitizeMoodTags } from "@/lib/validation/pulse";
+import { pulseSchema, sanitizeMoodTags, RECOGNITION_CATEGORY_VALUES } from "@/lib/validation/pulse";
 import { todayKey, utcDateKey } from "@/lib/utils/date";
 
 export type PulseActionResult = { ok: true } | { ok: false; error: string };
@@ -28,6 +28,9 @@ export async function submitPulse(
     moodTags: sanitizeMoodTags(formData.getAll("moodTags")),
     bestMoment: formData.get("bestMoment"),
     improvementText: formData.get("improvementText"),
+    recognitionRecipientId: formData.get("recognitionRecipientId"),
+    recognitionCategory: formData.get("recognitionCategory"),
+    recognitionMessage: formData.get("recognitionMessage"),
   });
 
   if (!parsed.success) {
@@ -49,17 +52,53 @@ export async function submitPulse(
     return { ok: false, error: "You have already recorded today's pulse." };
   }
 
+  const recipientId = parsed.data.recognitionRecipientId || undefined;
+
+  if (recipientId) {
+    if (recipientId === user.id) {
+      return { ok: false, error: "You can't recognize yourself." };
+    }
+    const [recipient] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          eq(users.id, recipientId),
+          eq(users.organizationId, user.organizationId),
+          eq(users.active, true)
+        )
+      )
+      .limit(1);
+    if (!recipient) {
+      return { ok: false, error: "That colleague isn't in your organization." };
+    }
+  }
+
   try {
     const input = parsed.data;
-    await db.insert(dailyPulses).values({
-      organizationId: user.organizationId,
-      employeeId: user.id,
-      pulseDate,
-      sentimentScore: input.sentimentScore,
-      moodTags: input.moodTags,
-      bestMoment: input.bestMoment?.trim() || null,
-      improvementText: input.improvementText?.trim() || null,
-    });
+    await db.batch([
+      db.insert(dailyPulses).values({
+        organizationId: user.organizationId,
+        employeeId: user.id,
+        pulseDate,
+        sentimentScore: input.sentimentScore,
+        moodTags: input.moodTags,
+        bestMoment: input.bestMoment?.trim() || null,
+        improvementText: input.improvementText?.trim() || null,
+      }),
+      ...(recipientId
+        ? [
+            db.insert(recognitions).values({
+              organizationId: user.organizationId,
+              giverId: user.id,
+              recipientId: recipientId,
+              recognitionDate: pulseDate,
+              category: input.recognitionCategory ?? RECOGNITION_CATEGORY_VALUES[0],
+              message: input.recognitionMessage?.trim() || null,
+            }),
+          ]
+        : []),
+    ]);
     revalidatePath("/employee", "layout");
     return { ok: true };
   } catch {

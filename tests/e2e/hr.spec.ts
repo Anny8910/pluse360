@@ -69,6 +69,19 @@ test.describe.serial("HR workspace: concerns, employees, reports (§8)", () => {
     await expect(page.locator("tbody tr").first()).toBeVisible();
   });
 
+  test("the HR member searches the roster by name", async ({ page }) => {
+    await login(page, HR_EMAIL);
+    await page.waitForURL("/hr");
+
+    await page.goto("/hr/employees");
+    await page.getByLabel("Search employees").fill("kabir");
+    await page.getByRole("button", { name: "Search" }).click();
+    await expect(page).toHaveURL(/\/hr\/employees\?q=kabir/);
+    const filtered = page.locator("tbody tr");
+    await expect(filtered).toHaveCount(1, { timeout: 10_000 });
+    await expect(filtered.first()).toContainText("Kabir Patel");
+  });
+
   test("the HR member opens a period-based pulse log for one employee", async ({
     page,
   }) => {
@@ -112,8 +125,17 @@ test.describe.serial("HR workspace: concerns, employees, reports (§8)", () => {
 
     const month = new Date().toLocaleString("en-US", { month: "long" });
     const year = String(new Date().getFullYear());
-    await expect(
-      page.locator("tbody tr").filter({ hasText: `${month} ${year}` })
-    ).toBeVisible();
+    const reportRow = page
+      .locator("tbody tr")
+      .filter({ hasText: `${month} ${year}` });
+    await expect(reportRow).toBeVisible();
+
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      reportRow.getByRole("link", { name: /Download .+ as PDF/ }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(
+      /pulse360-report-\d{4}-\d{2}\.pdf/
+    );
   });
 });

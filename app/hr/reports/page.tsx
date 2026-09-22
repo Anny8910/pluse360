@@ -1,5 +1,7 @@
 import { eq } from "drizzle-orm";
+import { FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HrNav } from "@/components/hr/nav";
 import { ReportGenerateForm } from "@/components/hr/report-form";
@@ -69,6 +71,7 @@ export default async function HrReportsPage() {
                   <TableHead>Avg sentiment</TableHead>
                   <TableHead>Positive / Negative</TableHead>
                   <TableHead>Generated</TableHead>
+                  <TableHead className="text-right">PDF</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -105,6 +108,19 @@ export default async function HrReportsPage() {
                               timeStyle: "short",
                             }).format(r.generatedAt)
                           : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <a
+                          href={`/api/hr/reports/${r.id}/pdf`}
+                          className={buttonVariants({
+                            variant: "ghost",
+                            size: "icon-sm",
+                          })}
+                          aria-label={`Download ${monthName(r.month)} ${r.year} as PDF`}
+                          title="Download report as PDF"
+                        >
+                          <FileDown aria-hidden="true" />
+                        </a>
                       </TableCell>
                     </TableRow>
                   );

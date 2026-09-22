@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { EmployeeNav } from "@/components/employee/nav";
 import { HeaderActions } from "@/components/auth/header-actions";
 import { PulseForm } from "@/components/employee/pulse-form";
 import { db } from "@/db";
-import { dailyPulses, organizations } from "@/db/schema";
+import { dailyPulses, organizations, users } from "@/db/schema";
 import { requireAuth } from "@/lib/permissions";
 import { todayKey, utcDateKey } from "@/lib/utils/date";
 
@@ -19,6 +19,19 @@ export default async function EmployeeSubmitPage() {
         columns: { timezone: true },
       })
     : null;
+
+  const teammates =
+    user.organizationId
+      ? await db.query.users.findMany({
+          where: and(
+            eq(users.organizationId, user.organizationId),
+            eq(users.active, true),
+            ne(users.id, user.id)
+          ),
+          orderBy: (u, { asc }) => [asc(u.name)],
+          columns: { id: true, name: true },
+        })
+      : [];
 
   const todayPulse = await db.query.dailyPulses.findFirst({
     where: and(
@@ -81,7 +94,7 @@ export default async function EmployeeSubmitPage() {
               </p>
             </div>
           ) : (
-            <PulseForm />
+            <PulseForm teammates={teammates} />
           )}
         </CardContent>
       </Card>

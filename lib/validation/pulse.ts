@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { MOOD_TAGS } from "@/db/schema";
+import { MOOD_TAGS, RECOGNITION_CATEGORIES } from "@/db/schema/constants";
 
 export const MOOD_TAG_VALUES = MOOD_TAGS as readonly string[];
+export const RECOGNITION_CATEGORY_VALUES = RECOGNITION_CATEGORIES as readonly string[];
 
 export const pulseSchema = z.object({
   sentimentScore: z.coerce
@@ -18,6 +19,18 @@ export const pulseSchema = z.object({
     .string()
     .trim()
     .max(500, "Keep it under 500 characters.")
+    .optional(),
+  recognitionRecipientId: z
+    .string()
+    .trim()
+    .uuid("Choose a colleague to recognize.")
+    .or(z.literal(""))
+    .optional(),
+  recognitionCategory: z.enum(RECOGNITION_CATEGORIES).optional(),
+  recognitionMessage: z
+    .string()
+    .trim()
+    .max(200, "Keep it under 200 characters.")
     .optional(),
 });
 

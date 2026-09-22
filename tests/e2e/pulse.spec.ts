@@ -54,6 +54,9 @@ test.describe.serial("daily pulse, history, and profile (§5–§6, §9)", () =>
     await page.getByText("Great", { exact: true }).click();
     await page.getByText("Collaborative", { exact: true }).click();
     await page.getByLabel("Best moment").fill("Shipped the release");
+    await page.getByLabel("Colleague").selectOption({ label: "Kabir Patel" });
+    await page.getByLabel("Reason").selectOption({ label: "Support" });
+    await page.getByLabel("Note (optional)").fill("Reviewed my PR");
     await page.getByRole("button", { name: "Record pulse" }).click();
 
     await expect(

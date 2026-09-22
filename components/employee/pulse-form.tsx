@@ -6,9 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { submitPulse } from "@/lib/pulse/actions";
-import { MOOD_TAG_VALUES, SENTIMENT_LABELS } from "@/lib/validation/pulse";
+import { MOOD_TAG_VALUES, RECOGNITION_CATEGORY_VALUES, SENTIMENT_LABELS } from "@/lib/validation/pulse";
 
-export function PulseForm() {
+interface TeammateOption {
+  id: string;
+  name: string;
+}
+
+const selectClass =
+  "border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-sm outline-none";
+
+export function PulseForm({ teammates }: { teammates?: TeammateOption[] }) {
   const [state, action, pending] = useActionState(submitPulse, undefined);
   const router = useRouter();
 
@@ -82,6 +90,59 @@ export function PulseForm() {
           placeholder="Anything you'd change? (optional)"
         />
       </div>
+
+      <fieldset className="flex flex-col gap-2.5 rounded-lg border border-dashed p-4">
+        <legend className="px-1 text-sm font-medium">
+          Recognize a teammate (optional)
+        </legend>
+        <p className="text-muted-foreground text-xs">
+          Thank someone for their help today — it appears in their pulse log and in
+          HR’s relationship insights.
+        </p>
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="recognition-recipient">Colleague</Label>
+            <select
+              id="recognition-recipient"
+              name="recognitionRecipientId"
+              defaultValue=""
+              className={selectClass}
+            >
+              <option value="">No one today</option>
+              {(teammates ?? []).map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="recognition-category">Reason</Label>
+            <select
+              id="recognition-category"
+              name="recognitionCategory"
+              defaultValue={RECOGNITION_CATEGORY_VALUES[0]}
+              className={selectClass}
+            >
+              {RECOGNITION_CATEGORY_VALUES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="recognition-message">Note (optional)</Label>
+          <Textarea
+            id="recognition-message"
+            name="recognitionMessage"
+            rows={2}
+            maxLength={200}
+            placeholder="What did they help with?"
+          />
+        </div>
+      </fieldset>
 
       {state && !state.ok ? (
         <p className="text-destructive text-sm">{state.error}</p>

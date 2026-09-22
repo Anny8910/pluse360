@@ -51,4 +51,53 @@ describe("pulse validation", () => {
       pulseSchema.safeParse({ sentimentScore: "5", bestMoment: "x".repeat(501) }).success
     ).toBe(false);
   });
+
+  it("accepts an optional recognition with a teammate", () => {
+    const result = pulseSchema.safeParse({
+      sentimentScore: "5",
+      recognitionRecipientId: "9b0453bb-5b4c-4cd2-8b6e-37e8de7dbf8a",
+      recognitionCategory: "Support",
+      recognitionMessage: "Thanks for the review!",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.recognitionCategory).toBe("Support");
+    }
+  });
+
+  it("accepts an empty recognition (no teammate picked)", () => {
+    expect(
+      pulseSchema.safeParse({
+        sentimentScore: "4",
+        recognitionRecipientId: "",
+        recognitionCategory: "Collaboration",
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects a malformed recipient or unknown category", () => {
+    expect(
+      pulseSchema.safeParse({
+        sentimentScore: "4",
+        recognitionRecipientId: "not-a-uuid",
+      }).success
+    ).toBe(false);
+    expect(
+      pulseSchema.safeParse({
+        sentimentScore: "4",
+        recognitionRecipientId: "9b0453bb-5b4c-4cd2-8b6e-37e8de7dbf8a",
+        recognitionCategory: "Gratitude",
+      }).success
+    ).toBe(false);
+  });
+
+  it("caps the recognition note at 200 characters", () => {
+    expect(
+      pulseSchema.safeParse({
+        sentimentScore: "3",
+        recognitionRecipientId: "9b0453bb-5b4c-4cd2-8b6e-37e8de7dbf8a",
+        recognitionMessage: "x".repeat(201),
+      }).success
+    ).toBe(false);
+  });
 });
